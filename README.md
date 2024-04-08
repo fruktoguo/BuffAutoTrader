@@ -4,3 +4,4 @@ greasyfork直接安装链接  [点击跳转](https://greasyfork.org/zh-CN/script
 所以USB调试之类的必须得开,不建议没有任何开发经验的小伙伴使用
 ![image](https://github.com/fruktoguo/BuffAutoTrader/assets/29684362/f866bf82-bc68-4d1f-9efa-ec5cde79e43e)
 这俩个地方的点击位置要根据自己手机分辨率自己更改,如果手机是2400*1080则不用更改
+手机点开我的购买页面后开始循环挂机
