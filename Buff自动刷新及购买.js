@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Buff自动刷新及购买
 // @namespace    http://tampermonkey.net/
-// @version      2024-04-10-17
+// @version      2024-04-17
 // @description  模仿手动操作,自动刷新和购买,建议使用批量购买,成功率更高,可以挂在后台,按理说也可以支持多开,自动发送报价的脚本在Github   https://github.com/fruktoguo/BuffAutoTrader自取,记得给个star
 // @include         /https:\/\/buff\.163\.com\/goods\/(csgo|dota2|rust|h1z1|tf2|pubg|pubg_recycle|\d+)/
 // @author       YuoHira
@@ -20,6 +20,9 @@
     // 获取当前页面的URL
     console.log('当前物品ID   ' + getItemID());
 
+    let itemName = document.querySelector('.detail-cont h1').textContent.trim();
+    console.log('物品名称   ' + itemName);
+
     const singleConfig = {
         等待载入延迟: GM_getValue(getItemID() + '等待载入延迟', 3000),
         购买延迟: GM_getValue(getItemID() + '购买延迟', 200),
@@ -37,6 +40,8 @@
         购买数量: GM_getValue(getItemID() + '批量购买数量', 1)
     };
 
+
+
     let isChecking = false;
 
     let isSingle = GM_getValue(getItemID() + 'buyMode', 'single') == 'single';
@@ -48,7 +53,7 @@
             50% { background-color: #ffcccb; }
             100% { background-color: #eeaaab; }
         }
-        
+
         #my-custom-container {
             position: fixed;
             top: 40px;
@@ -73,7 +78,7 @@
 
             animation: cuteBackground 5s infinite;
         }
-        
+
         .custom-tab-container button {
             background-color: #ffcccb; /* 淡红色 */
             border: none;
@@ -86,22 +91,22 @@
             transition: all 0.3s ease; /* 添加过渡效果 */
             border-radius: 5px; /* 添加圆角 */
         }
-        
+
         .custom-tab-container button.active-tab {
             background-color: #ff6f61; /* 深红色 */
             border-color: #ff6f61;
             box-shadow: 0 0 10px #ff6f61; /* 添加阴影 */
         }
-        
+
         .custom-tab {
             display: none;
             padding-top: 10px;
         }
-        
+
         .custom-tab.active {
             display: block;
         }
-        
+
         .custom-input {
             display: block;
             width: calc(80% - 120px);
@@ -113,11 +118,11 @@
             transition: all 0.3s ease; /* 添加过渡效果 */
             border-radius: 5px; /* 添加圆角 */
         }
-        
+
         .custom-input:hover {
             transform: scale(1.1); /* 添加弹性效果 */
         }
-        
+
         .custom-label {
             font-size: 14px;
             font-weight: bold;
@@ -133,7 +138,7 @@
             transform: scaleX(1.1);
             transition: transform 0.5s;
         }
-        
+
         .control-button:active {
             transform: scaleY(0.9);
             transition: transform 0.2s;
@@ -256,7 +261,52 @@
         }
     });
 
+    const text = document.createElement('p');
+    text.textContent = '是否开启通知';
+    text.style.marginTop = '5px';
+    text.style.marginLeft = '5px';
+    container.appendChild(text);
+
+    // 创建一个开关，用来控制是否发送通知
+    const notificationSwitch = document.createElement('input');
+    notificationSwitch.type = 'checkbox';
+    notificationSwitch.id = 'notificationSwitch';
+    notificationSwitch.style.marginTop = '5px';
+
+    notificationSwitch.checked = GM_getValue(getItemID() + 'notificationSwitch', true);
+    notificationSwitch.addEventListener('change', function () {
+        GM_setValue(getItemID() + 'notificationSwitch', this.checked);
+    });
+    container.appendChild(notificationSwitch);
+
     mainCheck();
+
+    function notify(title, body) {
+        // 检测是否发送
+        if (!GM_getValue(getItemID() + 'notificationSwitch', true)) {
+            return;
+        }
+        // 检查浏览器是否支持通知
+        if (!("Notification" in window)) {
+            //alert("This browser does not support system notifications");
+        }
+
+        // 检查用户是否已经同意接收通知
+        else if (Notification.permission === "granted") {
+            // 如果已经同意，创建一个通知
+            var notification = new Notification(title, {body: body});
+        }
+
+        // 否则，请求用户权限
+        else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(function (permission) {
+                // 如果用户同意，创建一个通知
+                if (permission === "granted") {
+                    var notification = new Notification(title, {body: body});
+                }
+            });
+        }
+    }
 
     function getPriceElements() {
         return document.querySelectorAll('.f_Strong');
@@ -346,10 +396,11 @@
                     confirmButtons[0].click();
                 }, 200);
 
+                notify(`${itemName}`, `可能抢到了 ${actualNum} 个`)
                 if (isSingle) {
                     setTimeout(reload, 2000);
                 } else {
-                    setTimeout(reload, 1000 + actualNum * 500);
+                    setTimeout(reload, 1000 + actualNum * 1000);
                 }
                 clearInterval(intervalId); // 找到按钮后清除循环
             }
